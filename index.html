@@ -1,0 +1,331 @@
+<!DOCTYPE html>
+<html lang="pt-BR" data-theme="dark">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <meta name="theme-color" content="#090D16">
+  <meta name="description" content="Estação de Monitoramento da Qualidade do Ar em tempo real com Arduino Mega e Adafruit IO.">
+  <title>Qualidade do Ar | Arduino Mega Station</title>
+
+  <!-- Google Fonts: Outfit & JetBrains Mono -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@500;700&family=Outfit:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+
+  <link rel="stylesheet" href="./style.css">
+</head>
+<body>
+
+  <!-- Background Ambient Glow -->
+  <div class="ambient-glow" id="ambientGlow"></div>
+
+  <div class="app-container">
+    
+    <!-- Top Navigation / Header -->
+    <header class="app-header">
+      <div class="brand">
+        <div class="brand-icon">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/>
+          </svg>
+        </div>
+        <div class="brand-text">
+          <h1>EcoAir Mega</h1>
+          <span class="sub-brand">Arduino Station • Adafruit IO</span>
+        </div>
+      </div>
+
+      <div class="header-actions">
+        <!-- Live Status Indicator -->
+        <div class="connectivity-badge" id="connectivityBadge" title="Status da Conexão em Tempo Real">
+          <span class="pulse-dot"></span>
+          <span class="status-label" id="connectivityText">ONLINE</span>
+        </div>
+
+        <!-- Theme Toggle Switch -->
+        <button class="icon-btn" id="themeToggleBtn" aria-label="Alternar Tema Dark/Light" title="Alternar Tema">
+          <svg class="sun-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <circle cx="12" cy="12" r="5"></circle>
+            <line x1="12" y1="1" x2="12" y2="3"></line>
+            <line x1="12" y1="21" x2="12" y2="23"></line>
+            <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line>
+            <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line>
+            <line x1="1" y1="12" x2="3" y2="12"></line>
+            <line x1="21" y1="12" x2="23" y2="12"></line>
+            <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line>
+            <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>
+          </svg>
+          <svg class="moon-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path>
+          </svg>
+        </button>
+
+        <!-- Manual Refresh Button -->
+        <button class="icon-btn" id="manualRefreshBtn" aria-label="Atualizar Dados Agora" title="Atualizar dados">
+          <svg class="refresh-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <polyline points="23 4 23 10 17 10"></polyline>
+            <polyline points="1 20 1 14 7 14"></polyline>
+            <path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"></path>
+          </svg>
+        </button>
+      </div>
+    </header>
+
+    <!-- Main Content Area -->
+    <main class="main-content">
+
+      <!-- Hero Card: Air Quality Main Status -->
+      <section class="hero-card-section">
+        <div class="hero-card status-loading" id="heroCard">
+          <div class="hero-card-header">
+            <div class="hero-title-group">
+              <span class="hero-subtitle">ESTAÇÃO EM TEMPO REAL</span>
+              <h2 class="hero-title">Qualidade do Ar</h2>
+            </div>
+            <div class="hero-status-badge" id="heroBadge">
+              <span class="badge-dot"></span>
+              <span id="heroBadgeText">CARREGANDO...</span>
+            </div>
+          </div>
+
+          <div class="hero-body">
+            <div class="hero-status-main">
+              <div class="hero-status-icon" id="heroIcon">
+                <!-- Dynamic SVG icon injected by JS -->
+                <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/>
+                </svg>
+              </div>
+              <div class="hero-status-value-group">
+                <span class="hero-status-text" id="qualidadeValue">---</span>
+                <p class="hero-recommendation" id="qualidadeRecommendation">Conectando aos sensores do Arduino Mega...</p>
+              </div>
+            </div>
+          </div>
+
+          <!-- Hero Footer with Refresh Progress & Timestamp -->
+          <div class="hero-card-footer">
+            <div class="timestamp-group">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <circle cx="12" cy="12" r="10"></circle>
+                <polyline points="12 6 12 12 16 14"></polyline>
+              </svg>
+              <span>Última leitura: <strong id="lastUpdatedText">--:--:--</strong></span>
+            </div>
+            <div class="refresh-timer-bar">
+              <div class="refresh-progress" id="refreshProgress"></div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Sensor Metrics Grid -->
+      <section class="metrics-grid-section">
+        <div class="section-header">
+          <h3 class="section-title">Leituras dos Sensores</h3>
+          <span class="section-tag">Arduino Mega 2560</span>
+        </div>
+
+        <div class="metrics-grid">
+          
+          <!-- Card 1: PM 2.5 -->
+          <article class="metric-card" id="cardPm25">
+            <div class="metric-header">
+              <div class="metric-info">
+                <span class="sensor-badge">Nova PM / SDS011</span>
+                <h4 class="metric-title">Material Particulado</h4>
+              </div>
+              <div class="metric-icon pm-icon">
+                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <circle cx="6" cy="6" r="2"/>
+                  <circle cx="18" cy="6" r="2"/>
+                  <circle cx="12" cy="12" r="3"/>
+                  <circle cx="6" cy="18" r="2"/>
+                  <circle cx="18" cy="18" r="2"/>
+                </svg>
+              </div>
+            </div>
+
+            <div class="metric-body">
+              <div class="metric-value-container">
+                <span class="metric-value" id="valPm25">--</span>
+                <span class="metric-unit">µg/m³</span>
+              </div>
+              <span class="metric-label-tag">PM 2.5</span>
+            </div>
+
+            <div class="metric-footer">
+              <div class="status-pill" id="pillPm25">
+                <span class="pill-dot"></span>
+                <span class="pill-text" id="textPm25">Aguardando...</span>
+              </div>
+              <div class="metric-bar-bg">
+                <div class="metric-bar-fill" id="barPm25" style="width: 0%;"></div>
+              </div>
+            </div>
+          </article>
+
+          <!-- Card 2: MQ-135 Gases -->
+          <article class="metric-card" id="cardMq135">
+            <div class="metric-header">
+              <div class="metric-info">
+                <span class="sensor-badge">Sensor MQ-135</span>
+                <h4 class="metric-title">Gases Nocivos</h4>
+              </div>
+              <div class="metric-icon gas-icon">
+                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <path d="M12 2c-5.33 0-8 3.5-8 7.5 0 5 8 12.5 8 12.5s8-7.5 8-12.5C20 5.5 17.33 2 12 2z"/>
+                  <path d="M12 9a2 2 0 1 0 0-4 2 2 0 0 0 0 4z"/>
+                </svg>
+              </div>
+            </div>
+
+            <div class="metric-body">
+              <div class="metric-value-container">
+                <span class="metric-value" id="valMq135">--</span>
+                <span class="metric-unit">ADC</span>
+              </div>
+              <span class="metric-label-tag">Qualidade do Ar (Gás)</span>
+            </div>
+
+            <div class="metric-footer">
+              <div class="status-pill" id="pillMq135">
+                <span class="pill-dot"></span>
+                <span class="pill-text" id="textMq135">Aguardando...</span>
+              </div>
+              <div class="metric-bar-bg">
+                <div class="metric-bar-fill" id="barMq135" style="width: 0%;"></div>
+              </div>
+            </div>
+          </article>
+
+          <!-- Card 3: Temperatura -->
+          <article class="metric-card" id="cardTemp">
+            <div class="metric-header">
+              <div class="metric-info">
+                <span class="sensor-badge">DHT11 / DHT22</span>
+                <h4 class="metric-title">Temperatura</h4>
+              </div>
+              <div class="metric-icon temp-icon">
+                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <path d="M14 14.76V3.5a2.5 2.5 0 0 0-5 0v11.26a4.5 4.5 0 1 0 5 0z"/>
+                </svg>
+              </div>
+            </div>
+
+            <div class="metric-body">
+              <div class="metric-value-container">
+                <span class="metric-value" id="valTemp">--</span>
+                <span class="metric-unit">°C</span>
+              </div>
+              <span class="metric-label-tag">Ambiente</span>
+            </div>
+
+            <div class="metric-footer">
+              <div class="status-pill" id="pillTemp">
+                <span class="pill-dot"></span>
+                <span class="pill-text" id="textTemp">Aguardando...</span>
+              </div>
+              <div class="metric-bar-bg">
+                <div class="metric-bar-fill" id="barTemp" style="width: 0%;"></div>
+              </div>
+            </div>
+          </article>
+
+          <!-- Card 4: Umidade -->
+          <article class="metric-card" id="cardHumidity">
+            <div class="metric-header">
+              <div class="metric-info">
+                <span class="sensor-badge">DHT11 / DHT22</span>
+                <h4 class="metric-title">Umidade Relativa</h4>
+              </div>
+              <div class="metric-icon humidity-icon">
+                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <path d="M12 2.69l5.66 5.66a8 8 0 1 1-11.31 0z"/>
+                </svg>
+              </div>
+            </div>
+
+            <div class="metric-body">
+              <div class="metric-value-container">
+                <span class="metric-value" id="valHumidity">--</span>
+                <span class="metric-unit">%</span>
+              </div>
+              <span class="metric-label-tag">Ar Atmosférico</span>
+            </div>
+
+            <div class="metric-footer">
+              <div class="status-pill" id="pillHumidity">
+                <span class="pill-dot"></span>
+                <span class="pill-text" id="textHumidity">Aguardando...</span>
+              </div>
+              <div class="metric-bar-bg">
+                <div class="metric-bar-fill" id="barHumidity" style="width: 0%;"></div>
+              </div>
+            </div>
+          </article>
+
+        </div>
+      </section>
+
+      <!-- Station Info & QR Code Trigger Section -->
+      <section class="station-info-section">
+        <div class="info-card">
+          <div class="info-icon">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <rect x="2" y="2" width="20" height="8" rx="2" ry="2"/>
+              <rect x="2" y="14" width="20" height="8" rx="2" ry="2"/>
+              <line x1="6" y1="6" x2="6.01" y2="6"/>
+              <line x1="6" y1="18" x2="6.01" y2="18"/>
+            </svg>
+          </div>
+          <div class="info-details">
+            <h5>Hardware: Arduino Mega 2560 R3</h5>
+            <p>Conectado via API REST Pública Adafruit IO (<code>reisharysson99</code>). Atualização contínua a cada 15s.</p>
+          </div>
+          <button class="qr-btn" id="openQrModalBtn" title="Exibir QR Code da Estação">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <rect x="3" y="3" width="7" height="7"/>
+              <rect x="14" y="3" width="7" height="7"/>
+              <rect x="14" y="14" width="7" height="7"/>
+              <rect x="3" y="14" width="7" height="7"/>
+            </svg>
+            <span>QR Code</span>
+          </button>
+        </div>
+      </section>
+
+    </main>
+
+    <!-- Footer -->
+    <footer class="app-footer">
+      <p>Estação de Monitoramento de Qualidade do Ar • Desenvolvido para Arduino Mega</p>
+      <span class="copyright">Alimentado por Adafruit IO API REST</span>
+    </footer>
+
+  </div>
+
+  <!-- QR Code Modal -->
+  <div class="modal-overlay" id="qrModal" aria-hidden="true">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h4>QR Code da Estação</h4>
+        <button class="close-btn" id="closeQrModalBtn" aria-label="Fechar Modal">&times;</button>
+      </div>
+      <div class="modal-body">
+        <p class="modal-desc">Escaneie o QR Code abaixo com a câmera do seu celular para abrir esta estação de monitoramento em tempo real:</p>
+        <div class="qr-container" id="qrCodeContainer">
+          <!-- QR Code Image generated dynamically -->
+          <img id="qrImage" src="" alt="QR Code da Aplicação">
+        </div>
+        <p class="qr-url" id="qrUrlText">http://localhost:5173/</p>
+      </div>
+      <div class="modal-footer">
+        <button class="btn-primary" id="copyUrlBtn">Copiar Link da Estação</button>
+      </div>
+    </div>
+  </div>
+
+  <script type="module" src="./app.js"></script>
+</body>
+</html>
