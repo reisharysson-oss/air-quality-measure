@@ -4,13 +4,16 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
   <meta name="theme-color" content="#090D16">
-  <meta name="description" content="Estação de Monitoramento da Qualidade do Ar em tempo real com Arduino Mega e Adafruit IO.">
-  <title>Qualidade do Ar | Arduino Mega Station</title>
+  <meta name="description" content="Estação da Qualidade do Ar em tempo real com Arduino Mega e Adafruit IO.">
+  <title>Estação da Qualidade do Ar | Arduino Mega</title>
 
   <!-- Google Fonts: Outfit & JetBrains Mono -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@500;700&family=Outfit:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+
+  <!-- Chart.js para gráficos históricos interativos -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
   <link rel="stylesheet" href="./style.css">
 </head>
@@ -24,14 +27,16 @@
     <!-- Top Navigation / Header -->
     <header class="app-header">
       <div class="brand">
-        <div class="brand-icon">
-          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-            <path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/>
+        <div class="brand-icon" title="Estação da Qualidade do Ar">
+          <!-- Ícone Folha / Meio Ambiente & Saúde -->
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M11 20A7 7 0 0 1 9.8 6.1C15.5 5 17 4.4 19 2c1 2 2 4.1 2 7 0 6-4.5 11-10 11Z"/>
+            <path d="M2 21c0-3 1.85-5.36 5.08-6C9.5 14.52 12 13 13 12"/>
           </svg>
         </div>
         <div class="brand-text">
-          <h1>EcoAir Mega</h1>
-          <span class="sub-brand">Arduino Station • Adafruit IO</span>
+          <h1>Estação da Qualidade do Ar</h1>
+          <span class="sub-brand">Arduino Mega • Adafruit IO</span>
         </div>
       </div>
 
@@ -80,7 +85,7 @@
           <div class="hero-card-header">
             <div class="hero-title-group">
               <span class="hero-subtitle">ESTAÇÃO EM TEMPO REAL</span>
-              <h2 class="hero-title">Qualidade do Ar</h2>
+              <h2 class="hero-title">Qualidade Geral do Ar</h2>
             </div>
             <div class="hero-status-badge" id="heroBadge">
               <span class="badge-dot"></span>
@@ -91,7 +96,6 @@
           <div class="hero-body">
             <div class="hero-status-main">
               <div class="hero-status-icon" id="heroIcon">
-                <!-- Dynamic SVG icon injected by JS -->
                 <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                   <path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/>
                 </svg>
@@ -123,16 +127,16 @@
       <section class="metrics-grid-section">
         <div class="section-header">
           <h3 class="section-title">Leituras dos Sensores</h3>
-          <span class="section-tag">Arduino Mega 2560</span>
+          <span class="section-tag">Clique em um cartão para ver o histórico</span>
         </div>
 
         <div class="metrics-grid">
           
           <!-- Card 1: PM 2.5 -->
-          <article class="metric-card" id="cardPm25">
+          <article class="metric-card clickable-card" id="cardPm25" data-feed="pm25" title="Clique para ver o gráfico histórico de PM 2.5">
             <div class="metric-header">
               <div class="metric-info">
-                <span class="sensor-badge">Nova PM / SDS011</span>
+                <span class="sensor-badge">DSM501A</span>
                 <h4 class="metric-title">Material Particulado</h4>
               </div>
               <div class="metric-icon pm-icon">
@@ -163,19 +167,29 @@
                 <div class="metric-bar-fill" id="barPm25" style="width: 0%;"></div>
               </div>
             </div>
+            <div class="card-chart-hint">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <polyline points="23 6 13.5 15.5 8.5 10.5 1 18"></polyline>
+                <polyline points="17 6 23 6 23 12"></polyline>
+              </svg>
+              <span>Ver Gráfico Histórico</span>
+            </div>
           </article>
 
-          <!-- Card 2: MQ-135 Gases -->
-          <article class="metric-card" id="cardMq135">
+          <!-- Card 2: MQ-135 Gases (Unidade em PPM) -->
+          <article class="metric-card clickable-card" id="cardMq135" data-feed="mq135" title="Clique para ver o gráfico histórico de MQ-135">
             <div class="metric-header">
               <div class="metric-info">
-                <span class="sensor-badge">Sensor MQ-135</span>
+                <span class="sensor-badge">MQ-135</span>
                 <h4 class="metric-title">Gases Nocivos</h4>
               </div>
               <div class="metric-icon gas-icon">
                 <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                  <path d="M12 2c-5.33 0-8 3.5-8 7.5 0 5 8 12.5 8 12.5s8-7.5 8-12.5C20 5.5 17.33 2 12 2z"/>
-                  <path d="M12 9a2 2 0 1 0 0-4 2 2 0 0 0 0 4z"/>
+                  <circle cx="6" cy="6" r="2"/>
+                  <circle cx="18" cy="6" r="2"/>
+                  <circle cx="12" cy="12" r="3"/>
+                  <circle cx="6" cy="18" r="2"/>
+                  <circle cx="18" cy="18" r="2"/>
                 </svg>
               </div>
             </div>
@@ -183,9 +197,18 @@
             <div class="metric-body">
               <div class="metric-value-container">
                 <span class="metric-value" id="valMq135">--</span>
-                <span class="metric-unit">ADC</span>
+                <span class="metric-unit">PPM</span>
               </div>
-              <span class="metric-label-tag">Qualidade do Ar (Gás)</span>
+              <span class="metric-label-tag">Concentração de Gás</span>
+              <!-- Badge Informativo de Segurança MQ-135 (< 800 PPM) -->
+              <div class="mq135-info-badge" title="Leituras abaixo de 800 PPM indicam ar com qualidade satisfatória">
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <circle cx="12" cy="12" r="10"></circle>
+                  <line x1="12" y1="16" x2="12" y2="12"></line>
+                  <line x1="12" y1="8" x2="12.01" y2="8"></line>
+                </svg>
+                <span>&lt; 800 PPM: Ar Satisfatório</span>
+              </div>
             </div>
 
             <div class="metric-footer">
@@ -197,13 +220,20 @@
                 <div class="metric-bar-fill" id="barMq135" style="width: 0%;"></div>
               </div>
             </div>
+            <div class="card-chart-hint">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <polyline points="23 6 13.5 15.5 8.5 10.5 1 18"></polyline>
+                <polyline points="17 6 23 6 23 12"></polyline>
+              </svg>
+              <span>Ver Gráfico Histórico</span>
+            </div>
           </article>
 
           <!-- Card 3: Temperatura -->
-          <article class="metric-card" id="cardTemp">
+          <article class="metric-card clickable-card" id="cardTemp" data-feed="temperatura" title="Clique para ver o gráfico histórico de Temperatura">
             <div class="metric-header">
               <div class="metric-info">
-                <span class="sensor-badge">DHT11 / DHT22</span>
+                <span class="sensor-badge">DHT11</span>
                 <h4 class="metric-title">Temperatura</h4>
               </div>
               <div class="metric-icon temp-icon">
@@ -230,13 +260,20 @@
                 <div class="metric-bar-fill" id="barTemp" style="width: 0%;"></div>
               </div>
             </div>
+            <div class="card-chart-hint">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <polyline points="23 6 13.5 15.5 8.5 10.5 1 18"></polyline>
+                <polyline points="17 6 23 6 23 12"></polyline>
+              </svg>
+              <span>Ver Gráfico Histórico</span>
+            </div>
           </article>
 
           <!-- Card 4: Umidade -->
-          <article class="metric-card" id="cardHumidity">
+          <article class="metric-card clickable-card" id="cardHumidity" data-feed="umidade" title="Clique para ver o gráfico histórico de Umidade">
             <div class="metric-header">
               <div class="metric-info">
-                <span class="sensor-badge">DHT11 / DHT22</span>
+                <span class="sensor-badge">DHT11</span>
                 <h4 class="metric-title">Umidade Relativa</h4>
               </div>
               <div class="metric-icon humidity-icon">
@@ -262,6 +299,13 @@
               <div class="metric-bar-bg">
                 <div class="metric-bar-fill" id="barHumidity" style="width: 0%;"></div>
               </div>
+            </div>
+            <div class="card-chart-hint">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <polyline points="23 6 13.5 15.5 8.5 10.5 1 18"></polyline>
+                <polyline points="17 6 23 6 23 12"></polyline>
+              </svg>
+              <span>Ver Gráfico Histórico</span>
             </div>
           </article>
 
@@ -299,10 +343,90 @@
 
     <!-- Footer -->
     <footer class="app-footer">
-      <p>Estação de Monitoramento de Qualidade do Ar • Desenvolvido para Arduino Mega</p>
+      <p>Estação da Qualidade do Ar • Desenvolvido para Arduino Mega</p>
       <span class="copyright">Alimentado por Adafruit IO API REST</span>
     </footer>
 
+  </div>
+
+  <!-- Modal de Gráfico Histórico Detalhado por Sensor -->
+  <div class="modal-overlay chart-modal-overlay" id="chartModal" aria-hidden="true">
+    <div class="chart-modal-card">
+      
+      <div class="modal-header">
+        <div class="chart-modal-title-group">
+          <button class="back-btn" id="closeChartModalBtn" title="Retornar ao Painel Geral">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <line x1="19" y1="12" x2="5" y2="12"></line>
+              <polyline points="12 19 5 12 12 5"></polyline>
+            </svg>
+            <span>Voltar ao Painel</span>
+          </button>
+          <div class="chart-modal-titles">
+            <h3 id="chartModalTitle">Histórico do Sensor</h3>
+            <span class="chart-modal-sub" id="chartModalSubtitle">Feed Adafruit IO</span>
+          </div>
+        </div>
+        <button class="close-btn" id="closeChartXBtn" aria-label="Fechar Modal">&times;</button>
+      </div>
+
+      <div class="modal-body chart-modal-body">
+
+        <!-- Controles de Filtros Rápidos & Datas -->
+        <div class="chart-filters-container">
+          <div class="quick-filters-group">
+            <button class="filter-btn active" data-period="24h">Últimas 24h</button>
+            <button class="filter-btn" data-period="7d">7 Dias</button>
+            <button class="filter-btn" data-period="all">Todo o Histórico</button>
+          </div>
+
+          <div class="date-range-group">
+            <div class="date-input-wrap">
+              <label for="startDate">Data Inicial:</label>
+              <input type="date" id="startDate" class="date-input">
+            </div>
+            <div class="date-input-wrap">
+              <label for="endDate">Data Final:</label>
+              <input type="date" id="endDate" class="date-input">
+            </div>
+            <button class="btn-filter-apply" id="applyCustomDateBtn">Filtrar</button>
+          </div>
+        </div>
+
+        <!-- Indicador de Carregamento Discreto -->
+        <div class="chart-loading-overlay" id="chartLoading">
+          <div class="spinner"></div>
+          <span>Carregando dados históricos do Adafruit IO...</span>
+        </div>
+
+        <!-- Canvas do Gráfico Chart.js -->
+        <div class="chart-wrapper">
+          <canvas id="detailChart"></canvas>
+        </div>
+
+        <!-- Cards de Estatísticas do Histórico -->
+        <div class="chart-stats-grid">
+          <div class="stat-card">
+            <span class="stat-label">Última Leitura</span>
+            <span class="stat-val" id="statLatest">--</span>
+          </div>
+          <div class="stat-card">
+            <span class="stat-label">Valor Mínimo</span>
+            <span class="stat-val" id="statMin">--</span>
+          </div>
+          <div class="stat-card">
+            <span class="stat-label">Valor Máximo</span>
+            <span class="stat-val" id="statMax">--</span>
+          </div>
+          <div class="stat-card">
+            <span class="stat-label">Média do Período</span>
+            <span class="stat-val" id="statAvg">--</span>
+          </div>
+        </div>
+
+      </div>
+
+    </div>
   </div>
 
   <!-- QR Code Modal -->
@@ -315,7 +439,6 @@
       <div class="modal-body">
         <p class="modal-desc">Escaneie o QR Code abaixo com a câmera do seu celular para abrir esta estação de monitoramento em tempo real:</p>
         <div class="qr-container" id="qrCodeContainer">
-          <!-- QR Code Image generated dynamically -->
           <img id="qrImage" src="" alt="QR Code da Aplicação">
         </div>
         <p class="qr-url" id="qrUrlText">http://localhost:5173/</p>
